@@ -352,7 +352,7 @@ function addParticipantVideo(participant, grid) {
                     <video
                     autoplay
                     playsinline
-                    muted=${participant.id === "you" ? "true" : "false"}
+                    ${participant.id === "you" ? 'muted' : ''}
                     id="remoteVideo_${participant.id}"
                     class="video-elm" ></video>
                     <div class="name-tag">${participant.id}</div>
