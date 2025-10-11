@@ -19,7 +19,7 @@ const rtc_config = {
 }
 
 const video_config = {
-    frameRate: 24,
+    frameRate: 18,
     width: {
         min: 480,
         ideal: 720,
@@ -221,11 +221,11 @@ joinBtn?.addEventListener("click", () => {
     })
     showMeetingView();
     updateGrid();
-    addLocalVideo();
+    addVideoSources();
 });
 
 socket.on('user_list', ({ userList }) => {
-
+    if (!isJoined) return;
     userList.forEach((uId) => {
         if (userId !== uId && !peers[uId]) {
             startNewPeer(uId, uId.localeCompare(userId) == 1)
@@ -268,15 +268,19 @@ socket.on('signal', async ({ from, data }) => {
     }
 })
 
-function addRemoteVideo(remoteId, stream) {
-    const meetingRemoteVideo = document.getElementById(`remoteVideo_${remoteId}`);
-    meetingRemoteVideo.srcObject = stream;
-}
-
-function addLocalVideo() {
+function addVideoSources() {
+    for (let p in peers) {
+        const stream = peers[p].stream;
+        const meetingRemoteVideo = document.getElementById(`remoteVideo_${p}`);
+        if (meetingRemoteVideo && stream) {
+            meetingRemoteVideo.srcObject = stream;
+        }
+    }
     const meetingLocalVideo = document.getElementById(`remoteVideo_you`);
     meetingLocalVideo.srcObject = localStream;
+
 }
+
 // Utlity functions defined here
 function startNewPeer(remoteId, isOfferer = undefined) {
     if (peers[remoteId]) return;
@@ -293,9 +297,9 @@ function startNewPeer(remoteId, isOfferer = undefined) {
                 remoteStream.addTrack(track);
             }
         });
+        peers[remoteId].stream = remoteStream;
         updateGrid();
-        addLocalVideo();
-        addRemoteVideo(remoteId, remoteStream);
+        addVideoSources();
     };
 
     conn.onicecandidate = (event) => {
