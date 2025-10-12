@@ -2,6 +2,7 @@
 
 const apikey = window.location.pathname.split("/").slice(-1)[0]?.split("_")[0]
 const userId = window.location.pathname.split("/").slice(-1)?.[0].split("_")?.[1]
+// let audio = new Audio('assets/notification/new_joined.mp3');
 
 const socket = io({
     query: {
@@ -219,6 +220,7 @@ joinBtn?.addEventListener("click", () => {
     socket.emit('new_user', {
         userId
     })
+    // audio.play();
     showMeetingView();
     updateGrid();
     addVideoSources();
@@ -241,6 +243,8 @@ socket.on('user_list', ({ userList }) => {
             const videoToRemove = document.getElementById(`remoteVideo_${id}`);
             if (videoToRemove) videoToRemove.remove();
             delete peers[id];
+            updateGrid();
+            addVideoSources();
         }
     });
 })
@@ -286,6 +290,7 @@ function startNewPeer(remoteId, isOfferer = undefined) {
     if (peers[remoteId]) return;
     const conn = new RTCPeerConnection(rtc_config);
     const remoteStream = new MediaStream();
+    // audio.play();
 
     if (localStream) {
         localStream.getTracks().forEach(track => conn.addTrack(track, localStream));
