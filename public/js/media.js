@@ -1,8 +1,10 @@
 // media.js
 
 const apikey = window.location.pathname.split("/").slice(-1)[0]?.split("_")[0]
-const userId = window.location.pathname.split("/").slice(-1)?.[0].split("_")?.[1]
-// let audio = new Audio('assets/notification/new_joined.mp3');
+let userId = window.location.pathname.split("/").slice(-1)?.[0].split("_")?.[1]
+let roomname;
+
+let audio = new Audio('assets/notification/new_joined.mp3');
 
 const socket = io({
     query: {
@@ -34,6 +36,7 @@ const videoElement = document.getElementById("localVideo");
 const errorMsg = document.getElementById("errorMsg");
 const joinBtn = document.getElementById("joinBtn");
 const usernameInput = document.getElementById("username");
+const roomnameInput = document.getElementById("roomname");
 const peers = {};
 let isJoined = false;
 const toggleVideoBtn = document.getElementById("toggleVideoBtn");
@@ -42,6 +45,7 @@ const videoIcon = document.getElementById("videoIcon");
 const audioIcon = document.getElementById("audioIcon");
 const videoLabel = document.getElementById("videoLabel");
 const audioLabel = document.getElementById("audioLabel");
+const randomName = "Guest" + Math.floor(Math.random() * 10000);
 
 // View containers
 const prejoinView = document.getElementById("prejoinView");
@@ -209,18 +213,26 @@ endCallBtn?.addEventListener("click", () => {
         peers[p].conn.close();
         delete peers[p];
     }
-
     socket.emit('leave_meeting');
 });
 
 /* ---------- Join / Start meeting  with rtc connection---------- */
 joinBtn?.addEventListener("click", () => {
-    const username = usernameInput ? (usernameInput.value?.trim() || "Guest") : "Guest";
+    roomname = roomnameInput ? (roomnameInput.value?.trim() || "Main") : "Main";
+    const username = usernameInput ? (usernameInput.value?.trim() || randomName) : randomName;
+    userId = username
+
+    if (!roomname) {
+        if (errorMsg) errorMsg.textContent = "Please enter room name.";
+        return;
+    }
+
     console.log(`Joining as ${username}`);
     socket.emit('new_user', {
-        userId
+        userId,
+        roomname
     })
-    // audio.play();
+    audio.play();
     showMeetingView();
     updateGrid();
     addVideoSources();
@@ -231,7 +243,7 @@ socket.on('user_list', ({ userList }) => {
     userList.forEach((uId) => {
         if (userId !== uId && !peers[uId]) {
             startNewPeer(uId, uId.localeCompare(userId) == 1)
-            // handle compare of id for decision of offerer and send it to function as second paramter
+            // decision of who will be the offerer
         }
     })
 
@@ -260,7 +272,7 @@ socket.on('signal', async ({ from, data }) => {
         await conn.setRemoteDescription(new RTCSessionDescription(data.offer))
         const answer = await conn.createAnswer();
         await conn.setLocalDescription(answer);
-        socket.emit('signal', { to: from, from: userId, data: { answer: conn.localDescription } });
+        socket.emit('signal', { to: from, from: userId, roomname, data: { answer: conn.localDescription } });
     } else if (data.answer) {
         conn.setRemoteDescription(new RTCSessionDescription(data.answer))
     } else if (data.candidate) {
@@ -282,7 +294,6 @@ function addVideoSources() {
     }
     const meetingLocalVideo = document.getElementById(`remoteVideo_you`);
     meetingLocalVideo.srcObject = localStream;
-
 }
 
 // Utlity functions defined here
@@ -290,7 +301,7 @@ function startNewPeer(remoteId, isOfferer = undefined) {
     if (peers[remoteId]) return;
     const conn = new RTCPeerConnection(rtc_config);
     const remoteStream = new MediaStream();
-    // audio.play();
+    audio.play();
 
     if (localStream) {
         localStream.getTracks().forEach(track => conn.addTrack(track, localStream));
@@ -309,7 +320,7 @@ function startNewPeer(remoteId, isOfferer = undefined) {
 
     conn.onicecandidate = (event) => {
         if (event.candidate) {
-            socket.emit('signal', { to: remoteId, from: userId, data: { candidate: event.candidate } });
+            socket.emit('signal', { to: remoteId, from: userId, roomname, data: { candidate: event.candidate } });
         }
     };
 
@@ -319,7 +330,7 @@ function startNewPeer(remoteId, isOfferer = undefined) {
         conn.createOffer()
             .then(offer => conn.setLocalDescription(offer))
             .then(() => {
-                socket.emit('signal', { to: remoteId, from: userId, data: { offer: conn.localDescription } })
+                socket.emit('signal', { to: remoteId, from: userId, roomname, data: { offer: conn.localDescription } })
             }).catch(err => console.log(err));
     }
 }

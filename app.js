@@ -14,6 +14,7 @@ var bodyParser = require('body-parser');
 const users = {};
 const meetUser = {}
 const userToSocket = {}
+const rooms = {}
 const path = require('path');
 const {
   UserEmailMatch,
@@ -86,6 +87,7 @@ mongoose
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
 
 
 // const sslOptions = {
@@ -996,18 +998,10 @@ io.on("connection", (socket) => {
 
   // User Disconnect
   socket.on("disconnect", () => {
-    for (let user in meetUser) {
-      if (meetUser[user].socket == socket.id) {
-        console.log(user + " left ");
-        delete meetUser[user];
-        delete userToSocket[socket.id];
-        console.log(meetUser);
-        break;
-      }
-    }
+    removeUserFromRooms(socket.id);
     socket.broadcast.emit('user-disconnected', socket.id);
     io.emit("user-list", users[socket.id]);    // for normal call
-    io.emit('user_list', { userList: Object.keys(meetUser) }); // confrence call
+
     userLeave({ id: users[socket.id] })
     delete users[socket.id];
   });
@@ -1016,35 +1010,36 @@ io.on("connection", (socket) => {
 
 
   socket.on('leave_meeting', () => {
-    const userId = userToSocket[socket.id];
-
-    if (userId) {
-      delete meetUser[userId];
-      delete userToSocket[socket.id];
-      broadcastUserList()
-    }
+    removeUserFromRooms(socket.id);
   })
 
   socket.on('new_user', (payload) => {
-
     const newUser = payload.userId
+    // meetUser[newUser] = { socket: socket.id }
+    if (!rooms[payload.roomname]) rooms[payload.roomname] = [];
+    rooms[payload.roomname].push({ socket: socket.id, userId: newUser });
+    // userToSocket[socket.id] = newUser;
+    console.log("users", rooms);
 
-    meetUser[newUser] = { socket: socket.id, candidate: [], sdp: '' }
-    userToSocket[socket.id] = newUser;
-    broadcastUserList()
+    broadcastUserList(payload.roomname);
   })
 
   socket.on('signal', (payload) => {
-    const { to, from, data } = payload;
-    if (to && meetUser[to]) {
-      io.to(meetUser[to].socket).emit('signal', { from, data })
-    }
-  })
+    const { to, from, data, roomname } = payload;
+    if (!roomname || !to) return;
 
-  function broadcastUserList() {
-    const userList = Object.keys(meetUser);
-    userList.forEach((user) => {
-      const userSocket = meetUser[user].socket
+    const roomUsers = rooms[roomname] || [];
+    const targetUser = roomUsers.find(u => u.userId === to);
+
+    if (targetUser) {
+      io.to(targetUser.socket).emit('signal', { from, data, roomname });
+    }
+  });
+
+  function broadcastUserList(roomname) {
+    const userList = rooms[roomname].map(u => u.userId);
+    rooms[roomname].forEach((user) => {
+      const userSocket = user.socket
       io.to(userSocket).emit('user_list', { userList });
     })
   }
@@ -1052,6 +1047,19 @@ io.on("connection", (socket) => {
   app.all('*', (req, res, next) => {
     res.status(404).render('404');
   });
+
+  function removeUserFromRooms(socketId) {
+    for (const roomname in rooms) {
+      const idx = rooms[roomname].findIndex(u => u.socket === socketId);
+      if (idx !== -1) {
+        rooms[roomname].splice(idx, 1);
+        broadcastUserList(roomname);
+        if (rooms[roomname].length === 0) delete rooms[roomname];
+        console.log(rooms);
+        break;
+      }
+    }
+  }
 
 });
 

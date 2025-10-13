@@ -15,7 +15,6 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            /* prevent root scrolling */
         }
 
         body {
@@ -126,7 +125,7 @@
 
         .participant-box:hover {
             box-shadow: 0 0 0 3px #1a73e8;
-            transform: scale(1.01);
+            /* transform: scale(1.01); */
         }
 
         .video-elm {
@@ -189,6 +188,7 @@
                     </div>
 
                     <input type="text" id="username" class="form-control mb-3" placeholder="Your Name (optional)" />
+                    <input type="text" id="roomname" class="form-control mb-3" placeholder="Room name" />
 
                     <button id="joinBtn" class="btn btn-primary w-100" disabled>Join</button>
                 </div>
