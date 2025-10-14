@@ -1020,7 +1020,7 @@ io.on("connection", (socket) => {
     rooms[payload.roomname].push({ socket: socket.id, userId: newUser });
     // userToSocket[socket.id] = newUser;
     console.log("users", rooms);
-
+    
     broadcastUserList(payload.roomname);
   })
 

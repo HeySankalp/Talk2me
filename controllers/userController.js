@@ -5,6 +5,7 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const sendEmail = require('./../utils/email');
 const { default: axios } = require('axios');
+const Room = require('../models/roomModel');
 
 const signToken = id => {
     return jwt.sign({ id: id }, process.env.JWT_SECRET, {
@@ -191,6 +192,79 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     });
 });
 
+
+const generateRandomString = length => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
+
+exports.create_or_join_room = catchAsync(async (req, res, next) => {
+    const { roomName: requestedRoomName, users } = req.body;
+
+    // Validate users is a non-empty array
+    if (!users || !Array.isArray(users) || users.length === 0) {
+        return res.status(400).json({ error: 'Users array is required with at least one user' });
+    }
+
+    // Validate each user object has required fields
+    for (const u of users) {
+        if (!u.userName || !u.userId) {
+            return res.status(400).json({ error: 'Each user must have userName and userId' });
+        }
+    }
+
+    // Function to generate a random alphanumeric string
+
+    let roomName = requestedRoomName;
+
+    // Generate a unique roomName if not provided
+    if (!roomName) {
+        let exists = true;
+        while (exists) {
+            const candidate = generateRandomString(8);
+            const room = await Room.findOne({ roomName: candidate });
+            if (!room) {
+                roomName = candidate;
+                exists = false;
+            }
+        }
+    }
+
+    // Find or create the room
+    let room = await Room.findOne({ roomName });
+    if (!room) {
+        room = new Room({ roomName, users: [] });
+    }
+
+    // Add only users who are not already in the room (based on userId uniqueness)
+    users.forEach(user => {
+        if (!room.users.some(u => u.userId === user.userId)) {
+            room.users.push(user);
+        }
+    });
+
+    await room.save();
+
+    const domain = req.protocol + '://' + req.get('host');
+    const meetUrl = `${domain}/meet/?roomname=${roomName}`;
+
+    res.status(200).json({
+        message: 'Room created or joined successfully',
+        roomName,
+        meetUrl,
+        users: room.users
+    });
+});
+
+
+
+
+
+
 /**
  * Logout
  */
@@ -198,6 +272,10 @@ exports.logout = async (req, res) => {
     res.clearCookie('user_id');
     res.clearCookie('jwt');
     res.status(200).json({ status: 'success' });
+}
+
+exports.create_meeting = async (req, res) => {
+
 }
 
 /**

@@ -11,7 +11,8 @@ router.get('/login', userController.login);
 router.get('/register', userController.register);
 router.get('/forgot_password', userController.forgot_password);
 router.get('/reset_password', userController.reset_password);
-router.get('/', userController.index);
-router.get('/meet/:apikey', userController.meet)
+router.get('/meet/:apikey', userController.meet);
+router.post('/create/meet', userController.create_or_join_room);
+// router.get('/meet')
 
 module.exports = router;
