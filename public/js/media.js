@@ -47,6 +47,9 @@ const videoLabel = document.getElementById("videoLabel");
 const audioLabel = document.getElementById("audioLabel");
 const randomName = "Guest" + Math.floor(Math.random() * 10000);
 
+let urlParams
+let roomNameQuery
+
 // View containers
 const prejoinView = document.getElementById("prejoinView");
 const meetingView = document.getElementById("meetingView");
@@ -101,6 +104,24 @@ function setAudioUI(enabled, hasTrack, iconEl, labelEl, btnEl) {
 
 /* ---------- Media init (pre-join) ---------- */
 async function initMedia() {
+
+    urlParams = new URLSearchParams(window.location.search);
+    roomNameQuery = urlParams.get('roomname');
+
+    if (roomNameQuery) {
+        const inputEl = roomnameInput
+        if (inputEl) {
+            const divEl = document.createElement('div');
+            divEl.textContent = roomNameQuery;
+            divEl.className = 'form-control mb-3'; // Keep the styling consistent
+            divEl.style.padding = '0.375rem 0.75rem'; // Optional: mimic input padding
+
+            inputEl.parentNode.replaceChild(divEl, inputEl);
+            roomname = roomNameQuery
+        }
+    }
+
+
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: video_config, audio: true });
         localStream = stream;
@@ -218,7 +239,7 @@ endCallBtn?.addEventListener("click", () => {
 
 /* ---------- Join / Start meeting  with rtc connection---------- */
 joinBtn?.addEventListener("click", () => {
-    roomname = roomnameInput ? (roomnameInput.value?.trim() || "Main") : "Main";
+    roomname = roomnameInput ? (roomnameInput.value?.trim() || "main") : roomNameQuery;
     const username = usernameInput ? (usernameInput.value?.trim() || randomName) : randomName;
     userId = username
 
