@@ -250,7 +250,7 @@ exports.create_or_join_room = catchAsync(async (req, res, next) => {
     await room.save();
 
     const domain = req.protocol + '://' + req.get('host');
-    const meetUrl = `${domain}/meet/?roomname=${roomName}`;
+    const meetUrl = `${domain}/meet/apikey_ezmdde2f4cjfsez/?roomname=${roomName}`;
 
     res.status(200).json({
         message: 'Room created or joined successfully',
