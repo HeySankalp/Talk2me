@@ -239,7 +239,7 @@ endCallBtn?.addEventListener("click", () => {
 
 /* ---------- Join / Start meeting  with rtc connection---------- */
 joinBtn?.addEventListener("click", () => {
-    roomname = roomnameInput ? (roomnameInput.value?.trim() || "main") : roomNameQuery;
+    roomname = !roomNameQuery ? (roomnameInput.value?.trim() || "main") : roomNameQuery;
     const username = usernameInput ? (usernameInput.value?.trim() || randomName) : randomName;
     userId = username
 
