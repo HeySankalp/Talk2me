@@ -84,6 +84,10 @@ mongoose
   })
   .then((con) => console.log("DB connected Successfully!"));
 
+app.use((req, res, next) => {
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), autoplay=()");
+  next();
+});
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
