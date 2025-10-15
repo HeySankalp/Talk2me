@@ -274,9 +274,7 @@ exports.logout = async (req, res) => {
     res.status(200).json({ status: 'success' });
 }
 
-exports.create_meeting = async (req, res) => {
 
-}
 
 /**
  * Login Page

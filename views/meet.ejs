@@ -69,6 +69,13 @@
             object-fit: cover;
         }
 
+        .action_button{
+             position: absolute;
+             right: 0%;
+             left: 0%;
+             bottom: 32%;
+        }
+
         .meeting-controls {
             position: absolute;
             bottom: 20px;
@@ -174,13 +181,13 @@
 
                     <div id="errorMsg" class="text-danger small mb-2"></div>
 
-                    <div class="d-flex justify-content-center gap-2 mb-3">
-                        <button id="toggleVideoBtn" class="btn btn-secondary d-inline-flex align-items-center gap-2"
+                    <div class=" action_button d-flex justify-content-center gap-2 mb-3 ">
+                        <button id="toggleVideoBtn" class="btn btn-outline-light  d-inline-flex align-items-center gap-2"
                             disabled>
                             <i class="bi bi-camera-video-fill" id="videoIcon"></i>
                             <!-- <span id="videoLabel"></span> -->
                         </button>
-                        <button id="toggleAudioBtn" class="btn btn-secondary d-inline-flex align-items-center gap-2"
+                        <button id="toggleAudioBtn" class="btn btn-outline-light d-inline-flex align-items-center gap-2"
                             disabled>
                             <i class="bi bi-mic-fill" id="audioIcon"></i>
                             <!-- <span id="audioLabel"></span> -->
@@ -192,6 +199,9 @@
 
                     <button id="joinBtn" class="btn btn-primary w-100" disabled>Join</button>
                 </div>
+            </div>
+            <div  id="existing_user" class="text-center text-secondary mt-3">
+                
             </div>
         </div>
     </div>

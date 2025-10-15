@@ -1,5 +1,4 @@
 // media.js
-
 const apikey = window.location.pathname.split("/").slice(-1)[0]?.split("_")[0]
 let userId = window.location.pathname.split("/").slice(-1)?.[0].split("_")?.[1]
 let roomname;
@@ -11,6 +10,11 @@ const socket = io({
         apikey
     }
 });
+
+socket.on('connect', () => {
+    socket.emit('check_meeting', { roomname: roomNameQuery });
+})
+
 
 const rtc_config = {
     iceServers: [{
@@ -116,7 +120,8 @@ async function initMedia() {
             divEl.className = 'form-control mb-3'; // Keep the styling consistent
             divEl.style.padding = '0.375rem 0.75rem'; // Optional: mimic input padding
 
-            inputEl.parentNode.replaceChild(divEl, inputEl);
+            if (inputEl.parentNode)
+                inputEl.parentNode.replaceChild(divEl, inputEl);
             roomname = roomNameQuery
         }
     }
@@ -146,7 +151,11 @@ async function initMedia() {
     }
 }
 
+
+
+
 document.addEventListener("DOMContentLoaded", initMedia);
+
 
 /* ---------- Pre-join toggles ---------- */
 toggleVideoBtn?.addEventListener("click", () => {
@@ -258,6 +267,12 @@ joinBtn?.addEventListener("click", () => {
     updateGrid();
     addVideoSources();
 });
+
+
+
+socket.on('meeting_status', ({ userList }) => {
+    updateExistingUserList(userList)
+})
 
 socket.on('user_list', ({ userList }) => {
     if (!isJoined) return;
@@ -400,3 +415,34 @@ function addParticipantVideo(participant, grid) {
                 `;
     grid.appendChild(box);
 }
+
+// Example usage: updateExistingUserList(['Alice', 'Bob', 'Charlie']);
+function updateExistingUserList(userNames) {
+    const container = document.getElementById('existing_user');
+    if (!container) return;
+
+    // Clear any existing content
+    container.innerHTML = '';
+
+    if (!Array.isArray(userNames) || userNames.length === 0) {
+        container.textContent = 'No users in the meeting yet.';
+        return;
+    }
+
+    // Create a comma-separated or "Alice, Bob and Charlie" style list
+    let displayString = '';
+
+    if (userNames.length === 1) {
+        displayString = `${userNames[0]} is in the meeting`;
+    } else if (userNames.length === 2) {
+        displayString = `${userNames[0]} and ${userNames[1]} are in the meeting`;
+    } else {
+        // More than two users
+        const allExceptLast = userNames.slice(0, -1).join(', ');
+        const last = userNames[userNames.length - 1];
+        displayString = `${allExceptLast}, and ${last} are in the meeting`;
+    }
+
+    container.textContent = displayString;
+}
+

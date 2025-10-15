@@ -66,8 +66,7 @@ const {
   profileUpdate,
   userLeave
 } = require('./utils/users');
-const { log } = require("console");
-const { register } = require("module");
+
 dotenv.config({ path: "./config.env" });
 
 /* ---------for Local database connection---------- */
@@ -1009,6 +1008,10 @@ io.on("connection", (socket) => {
   // -------------------------------New added socket events for meet------------------------------------
 
 
+  socket.on('check_meeting', ({ roomname }) => {
+    broadcastExistingUser(roomname, socket.id);
+  });
+
   socket.on('leave_meeting', () => {
     removeUserFromRooms(socket.id);
   })
@@ -1020,7 +1023,7 @@ io.on("connection", (socket) => {
     rooms[payload.roomname].push({ socket: socket.id, userId: newUser });
     // userToSocket[socket.id] = newUser;
     console.log("users", rooms);
-    
+
     broadcastUserList(payload.roomname);
   })
 
@@ -1044,6 +1047,14 @@ io.on("connection", (socket) => {
     })
   }
 
+  function broadcastExistingUser(roomname, socketId) {
+    if (rooms[roomname]) {
+      console.log(rooms[roomname]);
+      const userList = rooms[roomname].map(u => u.userId);
+      io.to(socketId).emit('meeting_status', { userList });
+    }
+  }
+
   app.all('*', (req, res, next) => {
     res.status(404).render('404');
   });
@@ -1060,6 +1071,5 @@ io.on("connection", (socket) => {
       }
     }
   }
-
 });
 
