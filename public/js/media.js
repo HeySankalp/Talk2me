@@ -1,6 +1,6 @@
 // media.js
 const apikey = window.location.pathname.split("/").slice(-1)[0]?.split("_")[0]
-let userId = window.location.pathname.split("/").slice(-1)?.[0].split("_")?.[1]
+let userId;
 let roomname;
 
 let audio = new Audio('assets/notification/new_joined.mp3');
@@ -17,12 +17,37 @@ socket.on('connect', () => {
 
 
 const rtc_config = {
-    iceServers: [{
-        "urls": ["stun:stun.l.google.com:19302",
-            "stun:stun1.l.google.com:19302",
-            "stun:stun2.l.google.com:19302"
-        ]
-    }]
+    iceServers: [
+        {
+            "urls": ["stun:stun.l.google.com:19302",
+                "stun:stun1.l.google.com:19302",
+                "stun:stun2.l.google.com:19302"
+            ]
+        },
+        {
+            urls: "stun:stun.relay.metered.ca:80",
+        },
+        {
+            urls: "turn:in.relay.metered.ca:80",
+            username: "d1d127d9674e18ab2c8eee9d",
+            credential: "F2WoQkz6X/dPo4rl",
+        },
+        {
+            urls: "turn:in.relay.metered.ca:80?transport=tcp",
+            username: "d1d127d9674e18ab2c8eee9d",
+            credential: "F2WoQkz6X/dPo4rl",
+        },
+        {
+            urls: "turn:in.relay.metered.ca:443",
+            username: "d1d127d9674e18ab2c8eee9d",
+            credential: "F2WoQkz6X/dPo4rl",
+        },
+        {
+            urls: "turns:in.relay.metered.ca:443?transport=tcp",
+            username: "d1d127d9674e18ab2c8eee9d",
+            credential: "F2WoQkz6X/dPo4rl",
+        }
+    ]
 }
 
 const video_config = {
@@ -226,8 +251,10 @@ meetingVideoBtn?.addEventListener("click", () => {
     const track = localStream.getVideoTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
+    socket.emit('user_action', { type: 'video', data: { enabled: track.enabled, userId, roomname } })
     setVideoUI(track.enabled, true, meetingVideoIcon, meetingVideoLabel, meetingVideoBtn);
 });
+
 
 meetingAudioBtn?.addEventListener("click", () => {
     if (!localStream) return;
@@ -320,6 +347,10 @@ socket.on('signal', async ({ from, data }) => {
     }
 })
 
+socket.on('user_action', ({ enabled, userId, roomname }) => {
+    console.log(userId)
+})
+
 function addVideoSources() {
     for (let p in peers) {
         const stream = peers[p].stream;
@@ -403,6 +434,8 @@ function updateGrid() {
 
 function addParticipantVideo(participant, grid) {
     const box = document.createElement('div');
+    const initials = getInitials(participant.id);
+    const bgColor = stringToColor(participant.id);
     box.className = 'participant-box';
     box.innerHTML = `
                     <video
@@ -412,6 +445,9 @@ function addParticipantVideo(participant, grid) {
                     id="remoteVideo_${participant.id}"
                     class="video-elm" ></video>
                     <div class="name-tag">${participant.id}</div>
+                    <div class="avatar_placeholder video_placeholder_${participant.id} d-none" >
+                    <div class="initials-circle" style="background-color: ${bgColor};">${initials}</div>
+                    </div>
                 `;
     grid.appendChild(box);
 }
@@ -446,3 +482,22 @@ function updateExistingUserList(userNames) {
     container.textContent = displayString;
 }
 
+function stringToColor(str) {
+    // Simple hash function to generate color from string
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00FFFFFF)
+        .toString(16)
+        .toUpperCase();
+    return "#" + "00000".substring(0, 6 - c.length) + c;
+}
+
+function getInitials(name) {
+    return name
+        .split(' ')
+        .map(part => part.charAt(0).toUpperCase())
+        .slice(0, 2)
+        .join('');
+}

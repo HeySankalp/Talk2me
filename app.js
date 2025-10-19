@@ -84,10 +84,11 @@ mongoose
   })
   .then((con) => console.log("DB connected Successfully!"));
 
-app.use((req, res, next) => {
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), autoplay=()");
-  next();
-});
+// app.use((req, res, next) => {
+//   res.setHeader("Permissions-Policy", "camera=(), microphone=(), autoplay=()");
+//   next();
+// });
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -1043,6 +1044,21 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on('user_action', ({ type, data }) => {
+    switch (type) {
+      case 'video':
+        if (rooms[data.roomname]) {
+          rooms[data.roomname].forEach((user) => {
+            const userSocket = user.socket
+            io.to(userSocket).emit('user_action', data);
+          })
+        }
+        break;
+      default:
+        break;
+    }
+  })
+
   function broadcastUserList(roomname) {
     const userList = rooms[roomname].map(u => u.userId);
     rooms[roomname].forEach((user) => {
@@ -1062,6 +1078,7 @@ io.on("connection", (socket) => {
   app.all('*', (req, res, next) => {
     res.status(404).render('404');
   });
+
 
   function removeUserFromRooms(socketId) {
     for (const roomname in rooms) {
