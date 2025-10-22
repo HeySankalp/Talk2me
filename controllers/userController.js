@@ -122,6 +122,16 @@ exports.signin = catchAsync(async (req, res, next) => {
 });
 
 
+exports.checkApp = catchAsync(async (req, res, next)=> {
+    return res.status(200).json({
+            status: 'working',
+            message: 'app is fit and fine!'
+        });
+})
+
+exports.redirect = catchAsync(async (req, res, next)=> {
+    return res.redirect('/meet/apikey=xyz');
+})
 
 /**
  * Forgot Password
