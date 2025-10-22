@@ -1,4 +1,2 @@
-backend/node_modules/
-talkies-frontend/node_modules/
-.next/
-.vercel
+node_modules/
+
