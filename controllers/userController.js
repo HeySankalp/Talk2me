@@ -122,14 +122,14 @@ exports.signin = catchAsync(async (req, res, next) => {
 });
 
 
-exports.checkApp = catchAsync(async (req, res, next)=> {
+exports.checkApp = catchAsync(async (req, res, next) => {
     return res.status(200).json({
-            status: 'working',
-            message: 'app is fit and fine!'
-        });
+        status: 'working',
+        message: 'app is fit and fine!'
+    });
 })
 
-exports.redirect = catchAsync(async (req, res, next)=> {
+exports.redirect = catchAsync(async (req, res, next) => {
     return res.redirect('/meet/apikey=xyz');
 })
 
@@ -257,13 +257,19 @@ exports.create_or_join_room = catchAsync(async (req, res, next) => {
         }
     });
 
-    await room.save();
+    room.save().then((res) => {
+        console.log(res);
+
+    }).catch((err) => {
+        console.log(err);
+
+    })
 
     const domain = req.protocol + '://' + req.get('host');
     const meetUrl = `${domain}/meet/apikey_ezmdde2f4cjfsez/?roomname=${roomName}`;
 
     res.status(200).json({
-        message: 'Room created or joined successfully',
+        message: 'Room created successfully',
         roomName,
         meetUrl,
         users: room.users
