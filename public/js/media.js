@@ -131,6 +131,16 @@ function setAudioUI(enabled, hasTrack, iconEl, labelEl, btnEl) {
     }
 }
 
+function updateVideoPlaceholder(user, isVisible) {
+    const videoPlaceholderElm = document.getElementById(`video_placeholder_${user}`)
+    if (videoPlaceholderElm && isVisible) {
+        videoPlaceholderElm?.classList?.add('d-none');
+    } else if (videoPlaceholderElm && !isVisible) {
+        videoPlaceholderElm?.classList?.remove('d-none');
+    } else {
+    }
+}
+
 /* ---------- Media init (pre-join) ---------- */
 async function initMedia() {
 
@@ -357,6 +367,7 @@ function addVideoSources() {
         const meetingRemoteVideo = document.getElementById(`remoteVideo_${p}`);
         if (meetingRemoteVideo && stream) {
             meetingRemoteVideo.srcObject = stream;
+
         }
     }
     const meetingLocalVideo = document.getElementById(`remoteVideo_you`);
@@ -445,7 +456,7 @@ function addParticipantVideo(participant, grid) {
                     id="remoteVideo_${participant.id}"
                     class="video-elm" ></video>
                     <div class="name-tag">${participant.id}</div>
-                    <div class="avatar_placeholder video_placeholder_${participant.id} d-none" >
+                    <div class="avatar_placeholder d-none" id="video_placeholder_${participant.id}" >
                     <div class="initials-circle" style="background-color: ${bgColor};">${initials}</div>
                     </div>
                 `;
@@ -457,30 +468,32 @@ function updateExistingUserList(userNames) {
     const container = document.getElementById('existing_user');
     if (!container) return;
 
-    // Clear any existing content
     container.innerHTML = '';
 
-    if (!Array.isArray(userNames) || userNames.length === 0) {
+    if (userNames.length === 0) {
         container.textContent = 'No users in the meeting yet.';
         return;
     }
 
-    // Create a comma-separated or "Alice, Bob and Charlie" style list
     let displayString = '';
 
     if (userNames.length === 1) {
         displayString = `${userNames[0]} is in the meeting`;
     } else if (userNames.length === 2) {
         displayString = `${userNames[0]} and ${userNames[1]} are in the meeting`;
-    } else {
-        // More than two users
+    } else if (userNames.length === 3) {
         const allExceptLast = userNames.slice(0, -1).join(', ');
         const last = userNames[userNames.length - 1];
-        displayString = `${allExceptLast}, and ${last} are in the meeting`;
+        displayString = `${allExceptLast} and ${last} are in the meeting`;
+    } else {
+        const firstTwo = userNames.slice(0, 2).join(', ');
+        const remainingCount = userNames.length - 2;
+        displayString = `${firstTwo} and ${remainingCount} more are in the meeting`;
     }
 
     container.textContent = displayString;
 }
+
 
 function stringToColor(str) {
     // Simple hash function to generate color from string

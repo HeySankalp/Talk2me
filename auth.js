@@ -3,10 +3,23 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const upload = require('express-fileupload');
 const userRouter = require('./routes/userRouters');
+const cors = require('cors');
 
 const app = express();
 app.use(upload());
 app.use(express.static('images'));
+
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST"]
+}));
+
+app.use((req, res, next) => {
+    res.setHeader("X-Frame-Options", "ALLOWALL");
+    res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    next();
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
