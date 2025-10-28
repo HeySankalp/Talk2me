@@ -3,7 +3,7 @@ const apikey = window.location.pathname.split("/").slice(-1)[0]?.split("_")[0]
 let userId;
 let roomname;
 
-let audio = new Audio('assets/notification/new_joined.mp3');
+var audio = new Audio('/assets/notification/newjoined.mp3');
 
 const socket = io({
     query: {
@@ -261,7 +261,8 @@ meetingVideoBtn?.addEventListener("click", () => {
     const track = localStream.getVideoTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
-    socket.emit('user_action', { type: 'video', data: { enabled: track.enabled, userId, roomname } })
+    updateVideoPlaceholder('you', track.enabled)
+    socket.emit('user_action', { type: 'video', data: { isVideo: track.enabled, userId, roomname } })
     setVideoUI(track.enabled, true, meetingVideoIcon, meetingVideoLabel, meetingVideoBtn);
 });
 
@@ -297,12 +298,15 @@ joinBtn?.addEventListener("click", () => {
     console.log(`Joining as ${username}`);
     socket.emit('new_user', {
         userId,
-        roomname
+        roomname,
+        isVideo: localStream?.getVideoTracks()?.[0]?.enabled,
+        isAudio: localStream?.getAudioTracks()?.[0]?.enabled
     })
     audio.play();
     showMeetingView();
     updateGrid();
     addVideoSources();
+    updateVideoPlaceholder("you", localStream?.getVideoTracks()?.[0]?.enabled)
 });
 
 
@@ -311,11 +315,11 @@ socket.on('meeting_status', ({ userList }) => {
     updateExistingUserList(userList)
 })
 
-socket.on('user_list', ({ userList }) => {
+socket.on('user_list', ({ userList, listWithMetaData }) => {
     if (!isJoined) return;
-    userList.forEach((uId) => {
-        if (userId !== uId && !peers[uId]) {
-            startNewPeer(uId, uId.localeCompare(userId) == 1)
+    listWithMetaData.forEach((uList) => {
+        if (userId !== uList.remoteId && !peers[uList.remoteId]) {
+            startNewPeer(uList.remoteId, uList.remoteId.localeCompare(userId) == 1, { isVideo: uList.isVideo, isAudio: uList.isAudio })
             // decision of who will be the offerer
         }
     })
@@ -357,8 +361,10 @@ socket.on('signal', async ({ from, data }) => {
     }
 })
 
-socket.on('user_action', ({ enabled, userId, roomname }) => {
-    console.log(userId)
+
+
+socket.on('user_action', ({ type, data }) => {
+    updateVideoPlaceholder(data?.userId, data?.isVideo);
 })
 
 function addVideoSources() {
@@ -375,7 +381,7 @@ function addVideoSources() {
 }
 
 // Utlity functions defined here
-function startNewPeer(remoteId, isOfferer = undefined) {
+function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
     if (peers[remoteId]) return;
     const conn = new RTCPeerConnection(rtc_config);
     const remoteStream = new MediaStream();
@@ -394,6 +400,7 @@ function startNewPeer(remoteId, isOfferer = undefined) {
         peers[remoteId].stream = remoteStream;
         updateGrid();
         addVideoSources();
+        updateVideoPlaceholder(remoteId, metaData?.isVideo);
     };
 
     conn.onicecandidate = (event) => {
@@ -415,14 +422,11 @@ function startNewPeer(remoteId, isOfferer = undefined) {
 
 function updateGrid() {
     const grid = document.getElementById('videoGrid');
-    const users = Object.keys(peers) // +1 for local video
-    count = users.length + 1
-    const participants = users.map(id => ({ id, stream: peers[id].stream }));
+    const users = Object.keys(peers);
+    const allParticipantIds = ['you', ...users];
+    const count = allParticipantIds.length;
 
-    // Remove existing grid classes
     grid.className = 'video-grid';
-
-    // Add appropriate grid class based on count
     if (count === 1) {
         grid.classList.add('cols-1');
     } else if (count === 2) {
@@ -435,35 +439,49 @@ function updateGrid() {
         grid.classList.add('cols-4');
     }
 
-    // Clear grid
-    grid.innerHTML = '';
 
-    // Add participants
-    addParticipantVideo({ id: "you" }, grid);
-    participants.forEach(participant => addParticipantVideo(participant, grid));
+    const currentBoxes = Array.from(grid.children);
+    const presentIds = new Set(currentBoxes.map(box => box.dataset.userid));
+
+
+    allParticipantIds.forEach(id => {
+        if (!presentIds.has(id)) {
+            addParticipantVideoIdBased(id, grid);
+        }
+    });
+
+
+    //remove if niot avialable
+    currentBoxes.forEach(box => {
+        if (!allParticipantIds.includes(box.dataset.userid)) {
+            grid.removeChild(box);
+        }
+    });
 }
 
-function addParticipantVideo(participant, grid) {
+function addParticipantVideoIdBased(id, grid) {
     const box = document.createElement('div');
-    const initials = getInitials(participant.id);
-    const bgColor = stringToColor(participant.id);
+    const initials = getInitials(id);
+    const bgColor = stringToColor(id);
     box.className = 'participant-box';
+    box.dataset.userid = id;
+
     box.innerHTML = `
-                    <video
-                    autoplay
-                    playsinline
-                    ${participant.id === "you" ? 'muted' : ''}
-                    id="remoteVideo_${participant.id}"
-                    class="video-elm" ></video>
-                    <div class="name-tag">${participant.id}</div>
-                    <div class="avatar_placeholder d-none" id="video_placeholder_${participant.id}" >
-                    <div class="initials-circle" style="background-color: ${bgColor};">${initials}</div>
-                    </div>
-                `;
+        <video
+            autoplay
+            playsinline
+            ${id === "you" ? 'muted' : ''}
+            id="remoteVideo_${id}"
+            class="video-elm"></video>
+        <div class="name-tag">${id}</div>
+        <div class="avatar_placeholder d-none" id="video_placeholder_${id}" >
+            <div class="initials-circle" style="background-color: ${bgColor};">${initials}</div>
+        </div>
+    `;
     grid.appendChild(box);
 }
 
-// Example usage: updateExistingUserList(['Alice', 'Bob', 'Charlie']);
+
 function updateExistingUserList(userNames) {
     const container = document.getElementById('existing_user');
     if (!container) return;
@@ -476,7 +494,6 @@ function updateExistingUserList(userNames) {
     }
 
     let displayString = '';
-
     if (userNames.length === 1) {
         displayString = `${userNames[0]} is in the meeting`;
     } else if (userNames.length === 2) {
@@ -496,7 +513,6 @@ function updateExistingUserList(userNames) {
 
 
 function stringToColor(str) {
-    // Simple hash function to generate color from string
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);

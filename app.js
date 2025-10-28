@@ -1025,11 +1025,11 @@ io.on("connection", (socket) => {
     const newUser = payload.userId
     // meetUser[newUser] = { socket: socket.id }
     if (!rooms[payload.roomname]) rooms[payload.roomname] = [];
-    rooms[payload.roomname].push({ socket: socket.id, userId: newUser });
+    rooms[payload.roomname].push({ socket: socket.id, userId: newUser, isVideo: payload?.isVideo, isAudio: payload?.isAudio });
     // userToSocket[socket.id] = newUser;
     console.log("users", rooms);
 
-    broadcastUserList(payload.roomname);
+    broadcastUserList(payload);
   })
 
   socket.on('signal', (payload) => {
@@ -1045,12 +1045,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on('user_action', ({ type, data }) => {
+    console.log(type, data);
+    
     switch (type) {
       case 'video':
         if (rooms[data.roomname]) {
           rooms[data.roomname].forEach((user) => {
+            if (user.userId == data.userId) return;
             const userSocket = user.socket
-            io.to(userSocket).emit('user_action', data);
+            io.to(userSocket).emit('user_action', { type, data });
           })
         }
         break;
@@ -1059,11 +1062,13 @@ io.on("connection", (socket) => {
     }
   })
 
-  function broadcastUserList(roomname) {
+  function broadcastUserList(payload) {
+    const roomname = payload.roomname;
     const userList = rooms[roomname].map(u => u.userId);
+    const listWithMetaData = rooms[roomname].map(u => ({ remoteId: u.userId, isVideo: u.isVideo, isAudio: u.isAudio }))
     rooms[roomname].forEach((user) => {
       const userSocket = user.socket
-      io.to(userSocket).emit('user_list', { userList });
+      io.to(userSocket).emit('user_list', { userList, listWithMetaData });
     })
   }
 
@@ -1085,7 +1090,7 @@ io.on("connection", (socket) => {
       const idx = rooms[roomname].findIndex(u => u.socket === socketId);
       if (idx !== -1) {
         rooms[roomname].splice(idx, 1);
-        broadcastUserList(roomname);
+        broadcastUserList({ roomname });
         if (rooms[roomname].length === 0) delete rooms[roomname];
         console.log(rooms);
         break;
