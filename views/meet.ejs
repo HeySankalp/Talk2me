@@ -142,7 +142,7 @@
 
         }
 
-        .avatar_placeholder{
+        .avatar_placeholder {
             background-color: #000000;
             position: absolute;
             display: flex;
@@ -171,7 +171,7 @@
             font-weight: 400;
         }
 
-        #prejoin_title{
+        #prejoin_title {
             position: absolute;
             top: 50%;
             right: 0;
@@ -180,7 +180,7 @@
             font-size: x-large;
             font-weight: 400;
         }
-        
+
         .name-tag {
             position: absolute;
             bottom: 1rem;
@@ -192,59 +192,166 @@
             font-size: 0.875rem;
             z-index: 3;
         }
+
+        /* Prejoin gradient + animation */
+        #prejoinView {
+            flex: 1 1 auto;
+            position: relative;
+            display: flex;
+            width: 100%;
+            /* Beautiful animated gradient background */
+            background: linear-gradient(-45deg, #1a73e8, #8e54e9, #4776e6, #86d8be, #6794c0);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            25% {
+                background-position: 100% 50%;
+            }
+
+            50% {
+                background-position: 100% 100%;
+            }
+
+            75% {
+                background-position: 0% 100%;
+            }
+        }
+
+        /* Prejoin card animation */
+        .prejoin-card-animate {
+            animation: cardIn 1.2s cubic-bezier(.23, 1.15, .66, 1) 0s 1 both;
+        }
+
+        @keyframes cardIn {
+            0% {
+                transform: translateY(40px) scale(0.96);
+                opacity: 0;
+            }
+
+            60% {
+                transform: translateY(-8px) scale(1.02);
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Prejoin headline gradient text */
+        .prejoin-head-gradient {
+            background: linear-gradient(90deg, #bacce4, #ccece2 60%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-fill-color: transparent;
+        }
+
+        #prejoinView .card {
+            box-shadow: 0 16px 32px 8px rgba(89, 120, 150, 0.14), 0 1.5px 12px 2px rgba(74, 143, 233, 0.14);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        #prejoinView .form-control {
+            border-radius: 0.75rem;
+            font-size: 1rem;
+        }
+
+        /* Animated fade-in for camera preview */
+        #prejoinView .bg-black {
+            animation: fadeInPreview 1.5s 0.2s both;
+        }
+
+        @keyframes fadeInPreview {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        #prejoin_title {
+            animation: fadeInTitle 1.2s 0.8s both;
+        }
+
+        @keyframes fadeInTitle {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action_button>button {
+            transition: transform 0.22s cubic-bezier(.5, 2, .3, 1), box-shadow 0.22s;
+        }
+
+        .action_button>button:hover {
+            transform: scale(1.11) translateY(-2px);
+            box-shadow: 0 4px 20px #1a73e830;
+        }
     </style>
 </head>
 
 <body>
     <!-- Pre-join UI -->
     <div id="prejoinView" class="d-flex w-100">
-        <div
-            class="d-flex flex-column justify-content-center flex-grow-1 bg-white border-end position-relative px-4 py-5">
-            <!-- <img src="https://www.datopic.com/assets/img/logo/logo.png" alt="Datopic Technology Logo" -->
-                <!-- class="position-absolute" style="top:20px; left:20px; width:220px;"  /> -->
+        <div class="d-flex flex-column justify-content-center flex-grow-1 border-end position-relative px-4 py-5">
             <div class="container">
-                <h1 class="display-4 fw-normal mb-2" style="color:#1a73e8;">Join a Meeting</h1>
-                <p class="text-secondary mb-0">Please allow camera and microphone access to preview the video and join
-                    the meeting.</p>
+                <h1 class="display-4 fw-bold mb-2 prejoin-head-gradient">Join a Meeting</h1>
+                <p class="text-white-50 mb-0 lead" style="text-shadow:0 1px 4px #0006;">Please allow camera and
+                    microphone access to preview the video and join the meeting.</p>
             </div>
         </div>
 
         <div class="d-flex flex-column justify-content-center align-items-center flex-grow-1 p-3 p-md-4">
-            <div class="card shadow-sm w-100" style="max-width:500px; border-radius:16px;">
-                <div class="card-body text-center p-4">
-                    <div  class="bg-black rounded w-100 mb-3 d-flex align-items-center position-relative justify-content-center"
+            <div class="card shadow-sm w-100 prejoin-card-animate" style="max-width:500px; border-radius:18px;">
+                <div class="card-body text-center p-2">
+                    <div class="bg-black rounded w-100 mb-3 d-flex align-items-center position-relative justify-content-center"
                         style="height:350px; overflow:hidden;">
                         <video id="localVideo" autoplay playsinline muted class="w-100 h-100"
                             style="object-fit:cover; transform:scaleX(-1);"></video>
-                            <span id="prejoin_title" class="d-none" >Camera is off</span>
+                        <span id="prejoin_title" class="d-none">Camera is off</span>
                     </div>
-
                     <div id="errorMsg" class="text-danger small mb-2"></div>
-
-                    <div class=" action_button d-flex justify-content-center gap-2 mb-3 ">
-                        <button id="toggleVideoBtn"
-                            class="btn btn-outline-light  d-inline-flex align-items-center gap-2" disabled>
+                    <div class="action_button d-flex justify-content-center gap-2 mb-3 ">
+                        <button id="toggleVideoBtn" class="btn btn-outline-light d-inline-flex align-items-center gap-2"
+                            disabled>
                             <i class="bi bi-camera-video-fill" id="videoIcon"></i>
-                            <!-- <span id="videoLabel"></span> -->
                         </button>
                         <button id="toggleAudioBtn" class="btn btn-outline-light d-inline-flex align-items-center gap-2"
                             disabled>
                             <i class="bi bi-mic-fill" id="audioIcon"></i>
-                            <!-- <span id="audioLabel"></span> -->
                         </button>
                     </div>
-
                     <input type="text" id="username" class="form-control mb-3" placeholder="Your Name (optional)" />
                     <input type="text" id="roomname" class="form-control mb-3" placeholder="Room name" />
-
                     <button id="joinBtn" class="btn btn-primary w-100" disabled>Join</button>
                 </div>
             </div>
-            <div id="existing_user" class="text-center text-secondary mt-3">
-
-            </div>
+            <div id="existing_user" class="text-center text-light mt-3" style="text-shadow:0 1px 2px #0008;"></div>
         </div>
     </div>
+
 
     <!-- Meeting UI -->
     <div id="meetingView" class="d-none w-100 h-100 position-relative">
