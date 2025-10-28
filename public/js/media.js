@@ -171,6 +171,14 @@ async function initMedia() {
         const v = stream.getVideoTracks()[0] || null;
         const a = stream.getAudioTracks()[0] || null;
 
+        if (meetingTitleLabel) {
+            if (v.enabled) {
+                meetingTitleLabel.classList.add('d-none');
+            } else {
+                meetingTitleLabel.classList.remove('d-none');
+            }
+        }
+
         if (errorMsg) errorMsg.textContent = "";
         if (joinBtn) joinBtn.disabled = false;
 
