@@ -92,6 +92,7 @@ const meetingVideoIcon = document.getElementById("meetingVideoIcon");
 const meetingAudioIcon = document.getElementById("meetingAudioIcon");
 const meetingVideoLabel = document.getElementById("meetingVideoLabel");
 const meetingAudioLabel = document.getElementById("meetingAudioLabel");
+const meetingTitleLabel = document.getElementById("prejoin_title")
 const endCallBtn = document.getElementById("endCallBtn");
 
 let localStream = null;
@@ -202,6 +203,13 @@ toggleVideoBtn?.addEventListener("click", () => {
         return;
     }
     track.enabled = !track.enabled;
+    if (meetingTitleLabel) {
+        if (track.enabled) {
+            meetingTitleLabel.classList.add('d-none');
+        } else {
+            meetingTitleLabel.classList.remove('d-none');
+        }
+    }
     setVideoUI(track.enabled, true, videoIcon, videoLabel, toggleVideoBtn);
 });
 
