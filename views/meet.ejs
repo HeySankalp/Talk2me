@@ -200,7 +200,7 @@
             display: flex;
             width: 100%;
             /* Beautiful animated gradient background */
-            background: linear-gradient(-45deg, #1a73e8, #8e54e9, #4776e6, #86d8be, #6794c0);
+            background: linear-gradient(-45deg, #85ace0, #af95da, #8ba3da, #86d8be, #8da6be);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             min-height: 100vh;
@@ -250,7 +250,7 @@
 
         /* Prejoin headline gradient text */
         .prejoin-head-gradient {
-            background: linear-gradient(90deg, #bacce4, #ccece2 60%);
+            background: linear-gradient(90deg, #fafafa, #ccece2 60%);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -315,10 +315,10 @@
 <body>
     <!-- Pre-join UI -->
     <div id="prejoinView" class="d-flex w-100">
-        <div class="d-flex flex-column justify-content-center flex-grow-1 border-end position-relative px-4 py-5">
+        <div class="d-flex flex-column justify-content-center flex-grow-1  position-relative px-4 py-5">
             <div class="container">
                 <h1 class="display-4 fw-bold mb-2 prejoin-head-gradient">Join a Meeting</h1>
-                <p class="text-white-50 mb-0 lead" style="text-shadow:0 1px 4px #0006;">Please allow camera and
+                <p class="text-white-50 mb-0  lead">Please allow camera and
                     microphone access to preview the video and join the meeting.</p>
             </div>
         </div>
@@ -374,6 +374,10 @@
             </button>
             <button id="meetingAudioBtn" class="btn btn-light d-inline-flex align-items-center gap-2">
                 <i class="bi bi-mic-fill" id="meetingAudioIcon"></i>
+
+            </button>
+            <button id="screenShareBtn" disabled class="btn btn-light d-inline-flex align-items-center gap-2">
+                <i class="bi bi-laptop"></i>
 
             </button>
             <button id="endCallBtn" class="btn btn-danger d-inline-flex align-items-center gap-2">

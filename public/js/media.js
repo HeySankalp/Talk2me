@@ -93,9 +93,11 @@ const meetingAudioIcon = document.getElementById("meetingAudioIcon");
 const meetingVideoLabel = document.getElementById("meetingVideoLabel");
 const meetingAudioLabel = document.getElementById("meetingAudioLabel");
 const meetingTitleLabel = document.getElementById("prejoin_title")
+const shareScreenBtn = document.getElementById("screenShareBtn");
 const endCallBtn = document.getElementById("endCallBtn");
 
 let localStream = null;
+let screenStream = null;
 
 /* ---------- Shared UI helpers ---------- */
 function setVideoUI(enabled, hasTrack, iconEl, labelEl, btnEl) {
@@ -221,6 +223,11 @@ toggleVideoBtn?.addEventListener("click", () => {
     setVideoUI(track.enabled, true, videoIcon, videoLabel, toggleVideoBtn);
 });
 
+shareScreenBtn?.addEventListener('click', async () => {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+    handleShareScreenStream()
+})
+
 toggleAudioBtn?.addEventListener("click", () => {
     if (!localStream) return;
     const track = localStream.getAudioTracks()[0];
@@ -271,6 +278,12 @@ function showPrejoinView() {
     initMedia();
 }
 
+// function handleShareScreenStream() {
+//     Object.keys(peers).forEach((user)=>{
+//         peers[user].conn
+//     })
+// }
+
 /* ---------- Meeting controls ---------- */
 meetingVideoBtn?.addEventListener("click", () => {
     if (!localStream) return;
@@ -318,6 +331,7 @@ joinBtn?.addEventListener("click", () => {
         isVideo: localStream?.getVideoTracks()?.[0]?.enabled,
         isAudio: localStream?.getAudioTracks()?.[0]?.enabled
     })
+    audio.volume = 0.4
     audio.play();
     showMeetingView();
     updateGrid();
@@ -401,6 +415,7 @@ function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
     if (peers[remoteId]) return;
     const conn = new RTCPeerConnection(rtc_config);
     const remoteStream = new MediaStream();
+    audio.volume = 0.4
     audio.play();
 
     if (localStream) {
