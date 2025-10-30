@@ -43,7 +43,7 @@ const rtc_config = {
         //     credential: "F2WoQkz6X/dPo4rl",
         // },
         {
-            urls: "tturn:18.217.254.108:3478?transport=tcp",
+            urls: "turn:18.217.254.108:3478?transport=tcp",
             username: "datopicturn",
             credential: "datopicturn123#",
         }
