@@ -24,28 +24,28 @@ const rtc_config = {
                 "stun:stun2.l.google.com:19302"
             ]
         },
+        // {
+        //     urls: "stun:stun.relay.metered.ca:80",
+        // },
+        // {
+        //     urls: "turn:in.relay.metered.ca:80",
+        //     username: "d1d127d9674e18ab2c8eee9d",
+        //     credential: "F2WoQkz6X/dPo4rl",
+        // },
+        // {
+        //     urls: "turn:in.relay.metered.ca:80?transport=tcp",
+        //     username: "d1d127d9674e18ab2c8eee9d",
+        //     credential: "F2WoQkz6X/dPo4rl",
+        // },
+        // {
+        //     urls: "turn:in.relay.metered.ca:443",
+        //     username: "d1d127d9674e18ab2c8eee9d",
+        //     credential: "F2WoQkz6X/dPo4rl",
+        // },
         {
-            urls: "stun:stun.relay.metered.ca:80",
-        },
-        {
-            urls: "turn:in.relay.metered.ca:80",
-            username: "d1d127d9674e18ab2c8eee9d",
-            credential: "F2WoQkz6X/dPo4rl",
-        },
-        {
-            urls: "turn:in.relay.metered.ca:80?transport=tcp",
-            username: "d1d127d9674e18ab2c8eee9d",
-            credential: "F2WoQkz6X/dPo4rl",
-        },
-        {
-            urls: "turn:in.relay.metered.ca:443",
-            username: "d1d127d9674e18ab2c8eee9d",
-            credential: "F2WoQkz6X/dPo4rl",
-        },
-        {
-            urls: "turns:in.relay.metered.ca:443?transport=tcp",
-            username: "d1d127d9674e18ab2c8eee9d",
-            credential: "F2WoQkz6X/dPo4rl",
+            urls: "tturn:18.217.254.108:3478?transport=tcp",
+            username: "datopicturn",
+            credential: "datopicturn123#",
         }
     ]
 }
@@ -274,8 +274,9 @@ function showPrejoinView() {
 
     if (meetingView) meetingView.classList.add("d-none");
     if (prejoinView) prejoinView.classList.remove("d-none");
-
     initMedia();
+    if (roomNameQuery)
+        socket.emit('check_meeting', { roomname: roomNameQuery });
 }
 
 // function handleShareScreenStream() {
