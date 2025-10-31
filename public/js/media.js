@@ -19,10 +19,12 @@ socket.on('connect', () => {
 const rtc_config = {
     iceServers: [
         {
-            "urls": ["stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-                "stun:stun2.l.google.com:19302"
-            ]
+            "urls":
+                [
+                    "stun:stun.l.google.com:19302",
+                    "stun:stun1.l.google.com:19302",
+                    "stun:stun2.l.google.com:19302"
+                ]
         },
         // {
         //     urls: "stun:stun.relay.metered.ca:80",
@@ -79,7 +81,7 @@ const randomName = "Guest" + Math.floor(Math.random() * 10000);
 let urlParams
 let roomNameQuery
 
-// View containers
+// View containersnpm
 const prejoinView = document.getElementById("prejoinView");
 const meetingView = document.getElementById("meetingView");
 
@@ -224,8 +226,14 @@ toggleVideoBtn?.addEventListener("click", () => {
 });
 
 shareScreenBtn?.addEventListener('click', async () => {
-    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
-    handleShareScreenStream()
+    if (shareScreenBtn.classList?.contains('btn-danger')) {
+        handleShareScreenStream('stop')
+    } else {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+        handleShareScreenStream('start')
+    }
+
+
 })
 
 toggleAudioBtn?.addEventListener("click", () => {
@@ -247,9 +255,7 @@ function showMeetingView() {
 
     isJoined = true;
 
-    if (meetingLocalVideo && localStream) {
-        meetingLocalVideo.srcObject = localStream;
-    }
+
 
     const v = localStream?.getVideoTracks()[0] || null;
     const a = localStream?.getAudioTracks()[0] || null;
@@ -266,7 +272,7 @@ function showPrejoinView() {
     } catch (e) {
         console.warn("Error stopping tracks", e);
     }
-    if (meetingLocalVideo) meetingLocalVideo.srcObject = null;
+    // if (meetingLocalVideo) meetingLocalVideo.srcObject = null;
 
     // remove all remote video tag
     // if (meetingRemoteVideo) meetingRemoteVideo.srcObject = null;
@@ -279,11 +285,42 @@ function showPrejoinView() {
         socket.emit('check_meeting', { roomname: roomNameQuery });
 }
 
-// function handleShareScreenStream() {
-//     Object.keys(peers).forEach((user)=>{
-//         peers[user].conn
-//     })
-// }
+function handleShareScreenStream(action) {
+    if (!screenStream) return;
+    let videoTrack;
+
+    if (action == 'start') {
+        shareScreenBtn.classList.remove('btn-light');
+        shareScreenBtn.classList.add('btn-danger');
+        videoTrack = screenStream.getVideoTracks()[0];
+    } else {
+        shareScreenBtn.classList.remove('btn-danger');
+        shareScreenBtn.classList.add('btn-light');
+        videoTrack = localStream.getVideoTracks()[0];
+    }
+
+    Object.keys(peers).forEach(user => {
+        const conn = peers[user].conn;
+        // Find the RTCRtpSender for the existing video track
+        const videoSender = conn.getSenders().find(sender => sender.track && sender.track.kind === 'video');
+
+        if (videoSender) {
+            // Replace camera video track with screen share track
+            videoSender.replaceTrack(videoTrack).catch(e => console.error("replaceTrack error:", e));
+        } else {
+            // If no video sender found, fallback to adding track
+            conn.addTrack(videoTrack, screenStream);
+        }
+    });
+
+    // Update local video preview to show screen share
+    const meetingLocalVideo = document.getElementById(`remoteVideo_you`);
+    if (meetingLocalVideo && action == 'start') {
+        meetingLocalVideo.srcObject = screenStream;
+    } else {
+        meetingLocalVideo.srcObject = localStream;
+    }
+}
 
 /* ---------- Meeting controls ---------- */
 meetingVideoBtn?.addEventListener("click", () => {
@@ -424,6 +461,7 @@ function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
     }
 
     conn.ontrack = (event) => {
+        // if(!peers[remoteId].stream)
         event.streams[0].getTracks().forEach(track => {
             if (!remoteStream.getTracks().find(t => t.id === track.id)) {
                 remoteStream.addTrack(track);
