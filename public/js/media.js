@@ -230,6 +230,7 @@ shareScreenBtn?.addEventListener('click', async () => {
         handleShareScreenStream('stop')
     } else {
         screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+
         handleShareScreenStream('start')
     }
 
@@ -293,6 +294,9 @@ function handleShareScreenStream(action) {
         shareScreenBtn.classList.remove('btn-light');
         shareScreenBtn.classList.add('btn-danger');
         videoTrack = screenStream.getVideoTracks()[0];
+        videoTrack.onended = () => {
+            handleShareScreenStream('stop');
+        }
     } else {
         shareScreenBtn.classList.remove('btn-danger');
         shareScreenBtn.classList.add('btn-light');
