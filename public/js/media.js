@@ -45,12 +45,12 @@ const rtc_config = {
         //     credential: "F2WoQkz6X/dPo4rl",
         // },
         {
-            urls: "turn:18.217.254.108:3478?transport=tcp",
+            urls: "turn:3.145.145.199:3478?transport=tcp",
             username: "datopicturn",
             credential: "datopicturn123#",
         },
         {
-            urls: "turn:18.217.254.108:3478",
+            urls: "turn:3.145.145.199:3478",
             username: "datopicturn",
             credential: "datopicturn123#",
         }
@@ -77,6 +77,8 @@ const peers = {};
 let isJoined = false;
 const toggleVideoBtn = document.getElementById("toggleVideoBtn");
 const toggleAudioBtn = document.getElementById("toggleAudioBtn");
+const unpinBtn = document.getElementById("unpinBtn");
+pinnedOverlayElm = document.getElementById("pinnedOverlay");
 const videoIcon = document.getElementById("videoIcon");
 const audioIcon = document.getElementById("audioIcon");
 const videoLabel = document.getElementById("videoLabel");
@@ -102,6 +104,7 @@ const meetingAudioLabel = document.getElementById("meetingAudioLabel");
 const meetingTitleLabel = document.getElementById("prejoin_title")
 const shareScreenBtn = document.getElementById("screenShareBtn");
 const endCallBtn = document.getElementById("endCallBtn");
+const overLayComponent = document.getElementById("pinnedOverlay");
 
 let localStream = null;
 let screenStream = null;
@@ -238,8 +241,10 @@ shareScreenBtn?.addEventListener('click', async () => {
 
         handleShareScreenStream('start')
     }
+})
 
-
+unpinBtn?.addEventListener('click', () => {
+    pinnedOverlayElm.classList.add('d-none');
 })
 
 toggleAudioBtn?.addEventListener("click", () => {
@@ -292,6 +297,7 @@ function showPrejoinView() {
 }
 
 function handleShareScreenStream(action) {
+    socket.emit('user_action', { type: 'screenshare', data: { userId, roomname, isStart: true } });
     if (!screenStream) return;
     let videoTrack;
 
@@ -303,6 +309,7 @@ function handleShareScreenStream(action) {
             handleShareScreenStream('stop');
         }
     } else {
+        socket.emit('user_action', { type: 'screenshare', data: { userId, roomname, isStart: false } });
         shareScreenBtn.classList.remove('btn-danger');
         shareScreenBtn.classList.add('btn-light');
         videoTrack = localStream.getVideoTracks()[0];
@@ -328,6 +335,20 @@ function handleShareScreenStream(action) {
         meetingLocalVideo.srcObject = screenStream;
     } else {
         meetingLocalVideo.srcObject = localStream;
+    }
+}
+
+function handlePinToScreen(userId, ispinned) {
+    const pinnedVideoElm = document.getElementById('pinnedVideo');
+    const videoToPin = document.getElementById(`remoteVideo_${userId}`);
+    if (ispinned) {
+        overLayComponent.classList.remove('d-none');
+        if (pinnedVideoElm && videoToPin) {
+            pinnedVideoElm.srcObject = videoToPin.srcObject;
+        }
+    } else {
+        overLayComponent.classList.add('d-none');
+        
     }
 }
 
@@ -441,7 +462,18 @@ socket.on('signal', async ({ from, data }) => {
 
 
 socket.on('user_action', ({ type, data }) => {
-    updateVideoPlaceholder(data?.userId, data?.isVideo);
+
+    switch (type) {
+        case 'video':
+            updateVideoPlaceholder(data?.userId, data?.isVideo);
+            break;
+        case 'screenshare':
+            handlePinToScreen(data?.userId, data?.isStart);
+            break;
+
+        default:
+            break;
+    }
 })
 
 function addVideoSources() {
@@ -553,6 +585,9 @@ function addParticipantVideoIdBased(id, grid) {
             id="remoteVideo_${id}"
             class="video-elm"></video>
         <div class="name-tag">${id}</div>
+        <button onclick="handlePinToScreen('${id}', true)" id="pinBtn_${id}"  class="btn pinBtn d-none  btn-sm btn-light"
+        style="position:absolute; top:10px; right:10px; z-index:;"><i class="bi bi-pin-angle-fill"></i>
+        </button>
         <div class="avatar_placeholder d-none" id="video_placeholder_${id}" >
             <div class="initials-circle" style="background-color: ${bgColor};">${initials}</div>
         </div>
@@ -609,3 +644,4 @@ function getInitials(name) {
         .slice(0, 2)
         .join('');
 }
+
