@@ -87,13 +87,16 @@
         }
 
         .video-container {
+            display: flex;
             flex: 1;
+            gap: 10px;
             padding: 1rem;
             overflow: auto;
             background-color: #1a1a1a;
         }
 
         .video-grid {
+            width: 100%;
             display: grid;
             gap: 1rem;
             height: 100%;
@@ -336,12 +339,37 @@
             object-fit: contain;
         }
 
-        #logo{
+        #logo {
             position: absolute;
             width: 200px;
             top: 10px;
             left: 20px;
         }
+
+        #chat_section {
+            width: 30%;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: width 0.4s cubic-bezier(.7, .3, .2, 1);
+        }
+
+        #chat_heading {
+            text-align: center;
+            width: 100%;
+        }
+
+        #top_chat_section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        /* #closeChatBtn{
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+        } */
     </style>
 </head>
 
@@ -405,6 +433,26 @@
                 <!-- Participants will be added here -->
 
             </div>
+            <div id="chat_section" style="padding:16px; height: 100%; overflow-y:auto; background:#fff;">
+                <div id="top_chat_section">
+                    <h5 id="chat_heading">In-call messages</h5><button id="closeChatBtn"
+                        class="btn btn-light d-inline-flex align-items-center gap-2 px-1 py-0">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+
+                <div class="chat-message">
+                    <span class="chat-user" style="color:#42a5f5;font-weight:600;">Alice:</span>
+                    <span class="chat-text">Hello team!</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-user" style="color:#66bb6a;font-weight:600;">Bob:</span>
+                    <span class="chat-text">Hi Alice, ready to start?</span>
+                </div>
+            </div>
+            <!-- Input field for new message -->
+
         </div>
 
         <div class="meeting-controls">
@@ -422,6 +470,10 @@
             </button>
             <button id="endCallBtn" class="btn btn-danger d-inline-flex align-items-center gap-2">
                 <i class="bi bi-telephone-x-fill"></i>
+
+            </button>
+            <button id="openChatBtn" class="btn btn-light d-inline-flex align-items-center gap-2">
+                <i class="bi bi-chat-left"></i>
 
             </button>
         </div>

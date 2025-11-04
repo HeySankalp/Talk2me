@@ -73,6 +73,9 @@ const errorMsg = document.getElementById("errorMsg");
 const joinBtn = document.getElementById("joinBtn");
 const usernameInput = document.getElementById("username");
 const roomnameInput = document.getElementById("roomname");
+const closeChatBtn = document.getElementById("closeChatBtn");
+const chatSection = document.getElementById("chat_section");
+const openChatBtn = document.getElementById("openChatBtn");
 const peers = {};
 let isJoined = false;
 const toggleVideoBtn = document.getElementById("toggleVideoBtn");
@@ -246,6 +249,23 @@ shareScreenBtn?.addEventListener('click', async () => {
 unpinBtn?.addEventListener('click', () => {
     pinnedOverlayElm.classList.add('d-none');
 })
+
+closeChatBtn?.addEventListener('click', () => {
+    chatSection.style.padding = "0";
+    chatSection.style.width = "0%";
+})
+
+openChatBtn?.addEventListener('click', () => {
+    if (chatSection.style.width === "0%") {
+        chatSection.style.padding = "10px";
+        chatSection.style.width = "30%";
+    }else{
+        chatSection.style.padding = "0";
+        chatSection.style.width = "0%";
+    }
+
+})
+
 
 toggleAudioBtn?.addEventListener("click", () => {
     if (!localStream) return;
