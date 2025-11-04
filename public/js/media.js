@@ -309,6 +309,9 @@ function handleShareScreenStream(action) {
             handleShareScreenStream('stop');
         }
     } else {
+        if (screenStream) {
+            screenStream.getTracks().forEach(t => t.stop());
+        }
         socket.emit('user_action', { type: 'screenshare', data: { userId, roomname, isStart: false } });
         shareScreenBtn.classList.remove('btn-danger');
         shareScreenBtn.classList.add('btn-light');
@@ -345,10 +348,11 @@ function handlePinToScreen(userId, ispinned) {
         overLayComponent.classList.remove('d-none');
         if (pinnedVideoElm && videoToPin) {
             pinnedVideoElm.srcObject = videoToPin.srcObject;
+            // if (isStart) pinnedVideoElm.style.transform = "scaleX(-1)";
         }
     } else {
         overLayComponent.classList.add('d-none');
-        
+
     }
 }
 
@@ -369,6 +373,7 @@ meetingAudioBtn?.addEventListener("click", () => {
     const track = localStream.getAudioTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
+    socket.emit('user_action', { type: 'audio', data: { isAudio: track.enabled, userId, roomname } })
     setAudioUI(track.enabled, true, meetingAudioIcon, meetingAudioLabel, meetingAudioBtn);
 });
 
@@ -464,6 +469,8 @@ socket.on('signal', async ({ from, data }) => {
 socket.on('user_action', ({ type, data }) => {
 
     switch (type) {
+        case 'audio':
+            updateAudioState(data?.userId, data?.isAudio)
         case 'video':
             updateVideoPlaceholder(data?.userId, data?.isVideo);
             break;
@@ -489,6 +496,17 @@ function addVideoSources() {
     meetingLocalVideo.srcObject = localStream;
 }
 
+function updateAudioState(user, isAudio) {
+    muteIcon = document.getElementById(`mic_${user}`);
+    if (muteIcon) {
+        if (isAudio) {
+            muteIcon.className = "bi bi-mic-fill";
+        } else {
+            muteIcon.className = "bi bi-mic-mute";
+        }
+    }
+}
+
 // Utlity functions defined here
 function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
     if (peers[remoteId]) return;
@@ -512,6 +530,7 @@ function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
         updateGrid();
         addVideoSources();
         updateVideoPlaceholder(remoteId, metaData?.isVideo);
+        updateAudioState(remoteId, metaData?.isAudio)
     };
 
     conn.onicecandidate = (event) => {
@@ -584,9 +603,9 @@ function addParticipantVideoIdBased(id, grid) {
             ${id === "you" ? 'muted' : ''}
             id="remoteVideo_${id}"
             class="video-elm"></video>
-        <div class="name-tag">${id}</div>
+        <div class="name-tag"><i id="mic_${id}" class="bi bi-mic-fill"> &nbsp; </i>${id}</div>
         <button onclick="handlePinToScreen('${id}', true)" id="pinBtn_${id}"  class="btn pinBtn d-none  btn-sm btn-light"
-        style="position:absolute; top:10px; right:10px; z-index:;"><i class="bi bi-pin-angle-fill"></i>
+        style="position:absolute; top:10px; right:10px; z-index:3;"><i class="bi bi-pin-angle-fill"></i>
         </button>
         <div class="avatar_placeholder d-none" id="video_placeholder_${id}" >
             <div class="initials-circle" style="background-color: ${bgColor};">${initials}</div>
