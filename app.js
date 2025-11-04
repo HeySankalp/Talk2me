@@ -1049,13 +1049,14 @@ io.on("connection", (socket) => {
 
     // switch (type) {
     //   case 'video':
-        if (rooms[data.roomname]) {
-          rooms[data.roomname].forEach((user) => {
-            if (user.userId == data.userId) return;
-            const userSocket = user.socket
-            io.to(userSocket).emit('user_action', { type, data });
-          })
-        } 
+    if (rooms[data.roomname]) {
+      rooms[data.roomname].forEach((user) => {
+
+        if (user.userId == data.userId && type != 'chat_message') return;
+        const userSocket = user.socket
+        io.to(userSocket).emit('user_action', { type, data });
+      })
+    }
   })
 
   function broadcastUserList(payload) {

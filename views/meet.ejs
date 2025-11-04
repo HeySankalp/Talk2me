@@ -347,10 +347,15 @@
         }
 
         #chat_section {
-            width: 30%;
+            gap: 5px;
+            display: flex;
+            flex-direction: column;
+            width: 0%;
+            height: 100%;
+            overflow-y: auto;
             background: white;
             border-radius: 0.75rem;
-            padding: 1rem;
+            padding: 0px;
             transition: width 0.4s cubic-bezier(.7, .3, .2, 1);
         }
 
@@ -360,10 +365,21 @@
         }
 
         #top_chat_section {
+            flex: 1;
             display: flex;
             align-items: center;
             margin-bottom: 1rem;
         }
+
+        #chat_list {
+
+            flex: 12;
+            overflow-y: auto;
+        }
+        .input_section{
+            flex: 1;
+        }
+
 
         /* #closeChatBtn{
             position: absolute;
@@ -433,22 +449,23 @@
                 <!-- Participants will be added here -->
 
             </div>
-            <div id="chat_section" style="padding:16px; height: 100%; overflow-y:auto; background:#fff;">
+            <div id="chat_section" >
                 <div id="top_chat_section">
                     <h5 id="chat_heading">In-call messages</h5><button id="closeChatBtn"
                         class="btn btn-light d-inline-flex align-items-center gap-2 px-1 py-0">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
-
-
-                <div class="chat-message">
-                    <span class="chat-user" style="color:#42a5f5;font-weight:600;">Alice:</span>
-                    <span class="chat-text">Hello team!</span>
+                <div id="chat_list" >
+                    <!-- Chat messages will appear here -->
                 </div>
-                <div class="chat-message">
-                    <span class="chat-user" style="color:#66bb6a;font-weight:600;">Bob:</span>
-                    <span class="chat-text">Hi Alice, ready to start?</span>
+                <div class="input_section input-group gap-2 mt-auto">
+                    <input type="text" id="chat_input" class="form-control  py-1 rounded-5" placeholder="Type a message..."
+                        aria-label="Chat message" aria-describedby="send-btn">
+                    <div class="input-group-append">
+                        <button id="send_message_btn"  class="btn btn-light rounded-5 "  type="button" id="send_btn"><i
+                                class="bi bi-send"></i></button>
+                    </div>
                 </div>
             </div>
             <!-- Input field for new message -->

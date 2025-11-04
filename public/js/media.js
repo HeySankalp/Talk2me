@@ -76,12 +76,14 @@ const roomnameInput = document.getElementById("roomname");
 const closeChatBtn = document.getElementById("closeChatBtn");
 const chatSection = document.getElementById("chat_section");
 const openChatBtn = document.getElementById("openChatBtn");
+const sendMessageBtn = document.getElementById("send_message_btn");
+const chatInput = document.getElementById("chat_input");
 const peers = {};
 let isJoined = false;
 const toggleVideoBtn = document.getElementById("toggleVideoBtn");
 const toggleAudioBtn = document.getElementById("toggleAudioBtn");
 const unpinBtn = document.getElementById("unpinBtn");
-pinnedOverlayElm = document.getElementById("pinnedOverlay");
+const pinnedOverlayElm = document.getElementById("pinnedOverlay");
 const videoIcon = document.getElementById("videoIcon");
 const audioIcon = document.getElementById("audioIcon");
 const videoLabel = document.getElementById("videoLabel");
@@ -256,14 +258,21 @@ closeChatBtn?.addEventListener('click', () => {
 })
 
 openChatBtn?.addEventListener('click', () => {
-    if (chatSection.style.width === "0%") {
+    if (chatSection.style.width == "0%" || chatSection.style.width == "") {
         chatSection.style.padding = "10px";
         chatSection.style.width = "30%";
-    }else{
+    } else {
         chatSection.style.padding = "0";
         chatSection.style.width = "0%";
     }
+})
 
+sendMessageBtn?.addEventListener('click', () => {
+    const message = chatInput.value.trim();
+    if (message === "") return;
+    // Emit the message to the server
+    socket.emit('user_action', { type: 'chat_message', data: { userId, roomname, message } });
+    chatInput.value = "";
 })
 
 
@@ -373,6 +382,21 @@ function handlePinToScreen(userId, ispinned) {
     } else {
         overLayComponent.classList.add('d-none');
 
+    }
+}
+
+function handleCallMessages(data) {
+    let userColor = stringToColor(data.userId);
+    let user = (userId == data.userId) ? "You" : data.userId;
+    let message = data.message;
+    let messageTemplate = `<div class="chat-message">
+                            <span class="chat-user" style="color:${userColor};font-weight:600;">${user}:</span>
+                            <span class="chat-text">${message}</span>
+                        </div>`
+    const chatList = document.getElementById('chat_list');
+    if (chatList) {
+        chatList.insertAdjacentHTML('beforeend', messageTemplate);
+        chatList.scrollTop = chatList.scrollHeight;
     }
 }
 
@@ -497,7 +521,8 @@ socket.on('user_action', ({ type, data }) => {
         case 'screenshare':
             handlePinToScreen(data?.userId, data?.isStart);
             break;
-
+        case 'chat_message':
+            handleCallMessages(data)
         default:
             break;
     }
