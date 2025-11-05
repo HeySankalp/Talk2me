@@ -267,6 +267,13 @@ openChatBtn?.addEventListener('click', () => {
     }
 })
 
+chatInput.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent form submission or new line
+        sendMessageBtn.click();        // Trigger the send button click
+    }
+});
+
 sendMessageBtn?.addEventListener('click', () => {
     const message = chatInput.value.trim();
     if (message === "") return;
@@ -388,17 +395,27 @@ function handlePinToScreen(userId, ispinned) {
 function handleCallMessages(data) {
     let userColor = stringToColor(data.userId);
     let user = (userId == data.userId) ? "You" : data.userId;
-    let message = data.message;
+
+    // Convert URLs in message to clickable links
+    let message = data.message.replace(
+        /(https?:\/\/[^\s]+)/g,
+        function (url) {
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        }
+    );
+
     let messageTemplate = `<div class="chat-message">
                             <span class="chat-user" style="color:${userColor};font-weight:600;">${user}:</span>
                             <span class="chat-text">${message}</span>
-                        </div>`
+                        </div>`;
+
     const chatList = document.getElementById('chat_list');
     if (chatList) {
         chatList.insertAdjacentHTML('beforeend', messageTemplate);
         chatList.scrollTop = chatList.scrollHeight;
     }
 }
+
 
 /* ---------- Meeting controls ---------- */
 meetingVideoBtn?.addEventListener("click", () => {

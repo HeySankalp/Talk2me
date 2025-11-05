@@ -1045,13 +1045,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on('user_action', ({ type, data }) => {
-    console.log(type, data);
-
     // switch (type) {
     //   case 'video':
     if (rooms[data.roomname]) {
       rooms[data.roomname].forEach((user) => {
-
         if (user.userId == data.userId && type != 'chat_message') return;
         const userSocket = user.socket
         io.to(userSocket).emit('user_action', { type, data });
