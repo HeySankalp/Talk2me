@@ -58,7 +58,7 @@ const rtc_config = {
 }
 
 const video_config = {
-    frameRate: 18,
+    frameRate: 15,
     width: {
         min: 480,
         ideal: 720,
