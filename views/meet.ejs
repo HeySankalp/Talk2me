@@ -386,6 +386,12 @@
             overflow-wrap: break-word;
         }
 
+        #chat_input{
+            outline: none;
+            border: none;
+            box-shadow: none;
+        }
+
 
         /* #closeChatBtn{
             position: absolute;
@@ -465,7 +471,7 @@
                 <div id="chat_list" >
                     <!-- Chat messages will appear here -->
                 </div>
-                <div class="input_section input-group gap-2 mt-auto">
+                <div class="input_section border rounded-5 input-group gap-2 mt-auto">
                     <input type="text" id="chat_input" class="form-control  py-1 rounded-5" placeholder="Type a message..."
                         aria-label="Chat message" aria-describedby="send-btn">
                     <div class="input-group-append">
