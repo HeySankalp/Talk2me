@@ -1,5 +1,5 @@
 // media.js
-const apikey = window.location.pathname.split("/").slice(-1)[0]?.split("_")[0]
+const apikey = "apikey_xyzweofjnewr8vneovbevef"
 let userId;
 let roomname;
 
@@ -26,31 +26,13 @@ const rtc_config = {
                     "stun:stun2.l.google.com:19302"
                 ]
         },
-        // {
-        //     urls: "stun:stun.relay.metered.ca:80",
-        // },
-        // {
-        //     urls: "turn:in.relay.metered.ca:80",
-        //     username: "d1d127d9674e18ab2c8eee9d",
-        //     credential: "F2WoQkz6X/dPo4rl",
-        // },
-        // {
-        //     urls: "turn:in.relay.metered.ca:80?transport=tcp",
-        //     username: "d1d127d9674e18ab2c8eee9d",
-        //     credential: "F2WoQkz6X/dPo4rl",
-        // },
-        // {
-        //     urls: "turn:in.relay.metered.ca:443",
-        //     username: "d1d127d9674e18ab2c8eee9d",
-        //     credential: "F2WoQkz6X/dPo4rl",
-        // },
         {
             urls: "turn:3.145.145.199:3478?transport=tcp",
             username: "datopicturn",
             credential: "datopicturn123#",
         },
         {
-            urls: "turn:3.145.145.199:3478",
+            urls: "turn:3.145.145.199:3478?transport=udp",
             username: "datopicturn",
             credential: "datopicturn123#",
         }
@@ -58,14 +40,22 @@ const rtc_config = {
 }
 
 const video_config = {
-    frameRate: 15,
+    frameRate: 10,          // Keep this as minimum frame rate you want (10fps)
     width: {
-        min: 480,
-        ideal: 720,
-        max: 1280
+        min: 320,             // Minimum width lowered from 480 to 320 (QVGA)
+        ideal: 320,           // Also set ideal to minimum for strict low res
+        max: 320              // Fix max to minimum to avoid higher res fallback
     },
-    aspectRatio: 1.33333
+    height: {
+        min: 240,             // Minimum height lowered from 240 to 240 (QVGA)
+        ideal: 240,
+        max: 240
+    },
+    aspectRatio: 1.33333    // Keep aspect ratio same (4:3)
 };
+
+const VIDEOS_PER_PAGE = 3;
+let currentPage = 0;
 
 // Pre-join elements
 const videoElement = document.getElementById("localVideo");
@@ -76,6 +66,7 @@ const roomnameInput = document.getElementById("roomname");
 const closeChatBtn = document.getElementById("closeChatBtn");
 const chatSection = document.getElementById("chat_section");
 const openChatBtn = document.getElementById("openChatBtn");
+const msgNotify = document.getElementById("msg_notify");
 const sendMessageBtn = document.getElementById("send_message_btn");
 const chatInput = document.getElementById("chat_input");
 const peers = {};
@@ -88,6 +79,8 @@ const videoIcon = document.getElementById("videoIcon");
 const audioIcon = document.getElementById("audioIcon");
 const videoLabel = document.getElementById("videoLabel");
 const audioLabel = document.getElementById("audioLabel");
+const nextPageBtn = document.getElementById("nextPageBtn");
+const prevPageBtn = document.getElementById("prevPageBtn");
 const randomName = "Guest" + Math.floor(Math.random() * 10000);
 
 let urlParams
@@ -110,6 +103,9 @@ const meetingTitleLabel = document.getElementById("prejoin_title")
 const shareScreenBtn = document.getElementById("screenShareBtn");
 const endCallBtn = document.getElementById("endCallBtn");
 const overLayComponent = document.getElementById("pinnedOverlay");
+
+urlParams = new URLSearchParams(window.location.search);
+roomNameQuery = urlParams.get('roomname');
 
 let localStream = null;
 let screenStream = null;
@@ -159,11 +155,19 @@ function updateVideoPlaceholder(user, isVisible) {
     }
 }
 
+(function checkIsAuthenticated() {
+    const isAuthenticated = localStorage.getItem('webauth');
+    if (isAuthenticated != 'true') {
+        console.log(window.location.href);
+        sessionStorage.setItem('redirectAfterLogin', window.location.href);
+        window.location.href = '/meet/auth';
+    }
+})();
+
+
+
 /* ---------- Media init (pre-join) ---------- */
 async function initMedia() {
-
-    urlParams = new URLSearchParams(window.location.search);
-    roomNameQuery = urlParams.get('roomname');
 
     if (roomNameQuery) {
         const inputEl = roomnameInput
@@ -212,8 +216,17 @@ async function initMedia() {
     }
 }
 
+nextPageBtn.addEventListener('click', () => {
+    currentPage++;
+    updateGrid(true);
+    addVideoSources()
+})
 
-
+prevPageBtn.addEventListener('click', () => {
+    currentPage--;
+    updateGrid(true);
+    addVideoSources
+})
 
 document.addEventListener("DOMContentLoaded", initMedia);
 
@@ -258,6 +271,7 @@ closeChatBtn?.addEventListener('click', () => {
 })
 
 openChatBtn?.addEventListener('click', () => {
+    msgNotify.style.display = "none";
     if (chatSection.style.width == "0%" || chatSection.style.width == "") {
         chatSection.style.padding = "10px";
         chatSection.style.width = "30%";
@@ -280,6 +294,7 @@ sendMessageBtn?.addEventListener('click', () => {
     // Emit the message to the server
     socket.emit('user_action', { type: 'chat_message', data: { userId, roomname, message } });
     chatInput.value = "";
+    chatInput.focus();
 })
 
 
@@ -414,6 +429,10 @@ function handleCallMessages(data) {
         chatList.insertAdjacentHTML('beforeend', messageTemplate);
         chatList.scrollTop = chatList.scrollHeight;
     }
+    if (chatSection.style.width == "0%" || chatSection.style.width == "") {
+        msgNotify.style.display = "block";
+    }
+
 }
 
 
@@ -450,6 +469,7 @@ endCallBtn?.addEventListener("click", () => {
 /* ---------- Join / Start meeting  with rtc connection---------- */
 joinBtn?.addEventListener("click", () => {
     roomname = !roomNameQuery ? (roomnameInput.value?.trim() || "main") : roomNameQuery;
+    updateQueryParam('roomname', roomname);
     const username = usernameInput ? (usernameInput.value?.trim() || randomName) : randomName;
     userId = username
 
@@ -581,6 +601,38 @@ function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
         localStream.getTracks().forEach(track => conn.addTrack(track, localStream));
     }
 
+
+    const sender = conn.getSenders().find(s => s.track && s.track.kind === 'video');
+    if (sender) {
+        const params = sender.getParameters();
+        if (!params.encodings) {
+            params.encodings = [{}];
+        }
+        // Set maxBitrate in bits per second, eg. 500 kbps = 500000
+        params.encodings[0].maxBitrate = 250000;
+        sender.setParameters(params).catch(e => console.warn('Failed to set bitrate', e));
+    }
+
+
+    // ----------------check bitrate
+    // let lastBytesSent = 0;
+    // let lastTimestamp = 0;
+    // function getCurrentBitrate(pc) {
+    //     pc.getStats(null).then(stats => {
+    //         stats.forEach(report => {
+    //             if (report.type === "outbound-rtp" && report.kind === "video") {
+    //                 if (lastTimestamp) {
+    //                     const bitrate = 8 * (report.bytesSent - lastBytesSent) / (report.timestamp - lastTimestamp);
+    //                     console.log(`Current video bitrate: ${bitrate.toFixed(0)} kbps`);
+    //                 }
+    //                 lastBytesSent = report.bytesSent;
+    //                 lastTimestamp = report.timestamp;
+    //             }
+    //         });
+    //     });
+    // }
+    // setInterval(() => getCurrentBitrate(conn), 1000);
+
     conn.ontrack = (event) => {
         // if(!peers[remoteId].stream)
         event.streams[0].getTracks().forEach(track => {
@@ -612,11 +664,24 @@ function startNewPeer(remoteId, isOfferer = undefined, metaData = {}) {
     }
 }
 
-function updateGrid() {
+function updateGrid(isNewPage = false) {
     const grid = document.getElementById('videoGrid');
     const users = Object.keys(peers);
     const allParticipantIds = ['you', ...users];
-    const count = allParticipantIds.length;
+    const totalCount = allParticipantIds.length;
+
+    const totalPages = Math.ceil(totalCount / VIDEOS_PER_PAGE);
+    if (currentPage >= totalPages) currentPage = totalPages - 1;
+    if (currentPage < 0) currentPage = 0;
+
+    const startIdx = currentPage * VIDEOS_PER_PAGE;
+    const endIdx = Math.min(startIdx + VIDEOS_PER_PAGE, totalCount);
+
+    const pageParticipantIds = allParticipantIds.slice(startIdx, endIdx);
+    const count = pageParticipantIds.length;
+
+    if (isNewPage)
+        grid.innerHTML = '';
 
     grid.className = 'video-grid';
     if (count === 1) {
@@ -636,16 +701,16 @@ function updateGrid() {
     const presentIds = new Set(currentBoxes.map(box => box.dataset.userid));
 
 
-    allParticipantIds.forEach(id => {
+    pageParticipantIds.forEach(id => {
         if (!presentIds.has(id)) {
             addParticipantVideoIdBased(id, grid);
         }
     });
 
 
-    //remove if niot avialable
+    //remove if not avialable
     currentBoxes.forEach(box => {
-        if (!allParticipantIds.includes(box.dataset.userid)) {
+        if (!pageParticipantIds.includes(box.dataset.userid)) {
             grid.removeChild(box);
         }
     });
@@ -657,7 +722,6 @@ function addParticipantVideoIdBased(id, grid) {
     const bgColor = stringToColor(id);
     box.className = 'participant-box';
     box.dataset.userid = id;
-
     box.innerHTML = `
         <video
             autoplay
@@ -676,6 +740,12 @@ function addParticipantVideoIdBased(id, grid) {
     grid.appendChild(box);
 }
 
+function updateQueryParam(key, value) {
+    const url = new URL(window.location);
+    url.searchParams.set(key, value);
+    // Update the URL in the browser without reloading the page
+    window.history.replaceState(null, '', url.toString());
+}
 
 function updateExistingUserList(userNames) {
     const container = document.getElementById('existing_user');
@@ -683,7 +753,7 @@ function updateExistingUserList(userNames) {
 
     container.innerHTML = '';
 
-    if (userNames.length === 0) {
+    if (userNames.length === 0 || !userNames) {
         container.textContent = 'No users in the meeting yet.';
         return;
     }

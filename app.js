@@ -1071,6 +1071,8 @@ io.on("connection", (socket) => {
       console.log(rooms[roomname]);
       const userList = rooms[roomname].map(u => u.userId);
       io.to(socketId).emit('meeting_status', { userList });
+    } else {
+      io.to(socketId).emit('meeting_status', { userList: [] });
     }
   }
 

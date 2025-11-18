@@ -130,9 +130,8 @@ exports.checkApp = catchAsync(async (req, res, next) => {
 })
 
 exports.redirect = catchAsync(async (req, res, next) => {
-    return res.redirect('/meet/apikey=xyz');
+    return res.redirect('/meet/');
 })
-
 /**
  * Forgot Password
  */
@@ -265,8 +264,9 @@ exports.create_or_join_room = catchAsync(async (req, res, next) => {
 
     })
 
-    const domain = req.protocol + '://' + req.get('host');
-    const meetUrl = `${domain}/meet/apikey_ezmdde2f4cjfsez/?roomname=${roomName}`;
+    // const domain = req.protocol + '://' + req.get('host');
+    const domain = process.env.QA_APP_URL || (req.protocol + '://' + req.get('host'));
+    const meetUrl = `${domain}/meet/?roomname=${roomName}`;
 
     res.status(200).json({
         message: 'Room created successfully',
@@ -333,4 +333,8 @@ exports.index = async (req, res) => {
 
 exports.meet = async (req, res) => {
     res.status(200).render('meet')
+}
+
+exports.meetauth = async (req, res) => {
+    res.status(200).render('meetauth')
 }
